@@ -1,4 +1,4 @@
-FROM circleci/node:8.1.4
+FROM circleci/node:8.8.0
 
 RUN set -x \
   && sudo apt-get update && sudo apt-get -y install apt-transport-https curl \
