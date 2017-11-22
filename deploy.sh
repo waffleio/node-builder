@@ -36,7 +36,7 @@ create_gh_deployment () {
       -H 'Content-Type: application/json' \
       -H 'Accept: application/vnd.github.ant-man-preview+json' \
       -u ${GITHUB_ACCESS_TOKEN} \
-      -d "$(gh_deployment_create_body)" > /dev/null
+      -d "$(gh_deployment_create_body)"
   fi
 }
 
@@ -177,8 +177,7 @@ tag_docker_release () {
 deploy () {
   if [[ ${environment} != "dev" ]]
   then
-    declare -r created_gh_deployment=$(create_gh_deployment)
-    declare -r gh_deploy_id=$(echo $created_gh_deployment | jq .id)
+    declare -r gh_deploy_id=$(create_gh_deployment | jq .id)
   fi
 
   echo "Deploying to ${environment}"
