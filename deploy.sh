@@ -28,21 +28,31 @@ EOD
 }
 
 create_gh_deployment () {
-  curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments" \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/vnd.github.ant-man-preview+json' \
-    -u ${GITHUB_ACCESS_TOKEN} \
-    -d "$(gh_deployment_create_body)" > /dev/null
+  if [[ ${GITHUB_ACCESS_TOKEN} == "" ]]
+  then
+    echo "Environment variable GITHUB_ACCESS_TOKEN not provided."
+  else
+    curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments" \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/vnd.github.ant-man-preview+json' \
+      -u ${GITHUB_ACCESS_TOKEN} \
+      -d "$(gh_deployment_create_body)" > /dev/null
+  fi
 }
 
 notify_gh_about_a_deployment () {
-  declare -r deployment_id=${1}
-  declare -r deployment_status=${2}
-  curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${deployment_id}/statuses" \
-    -H 'Content-Type: application/json' \
-    -H 'Accept: application/vnd.github.ant-man-preview+json' \
-    -u ${GITHUB_ACCESS_TOKEN} \
-    -d "$(gh_deployment_notify_body $deployment_status)" > /dev/null
+  if [[ ${GITHUB_ACCESS_TOKEN} == "" ]]
+  then
+    echo "Environment variable GITHUB_ACCESS_TOKEN not provided."
+  else
+    declare -r deployment_id=${1}
+    declare -r deployment_status=${2}
+    curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${deployment_id}/statuses" \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/vnd.github.ant-man-preview+json' \
+      -u ${GITHUB_ACCESS_TOKEN} \
+      -d "$(gh_deployment_notify_body $deployment_status)" > /dev/null
+  fi
 }
 
 gh_deployment_notify_body () {
@@ -108,9 +118,14 @@ EOD
 }
 
 notify_slack_about_a_release () {
-  curl -s -X POST ${SLACK_WEBHOOK_URL} \
-    -H 'Content-Type: application/json' \
-    -d "$(slack_body $1)" > /dev/null
+  if [[ ${SLACK_WEBHOOK_URL} == "" ]]
+  then
+    echo "Environment variable SLACK_WEBHOOK_URL not provided."
+  else
+    curl -s -X POST ${SLACK_WEBHOOK_URL} \
+      -H 'Content-Type: application/json' \
+      -d "$(slack_body $1)" > /dev/null
+  fi
 }
 
 newrelic_body () {
@@ -125,10 +140,33 @@ EOD
 }
 
 notify_newrelic_about_a_release () {
-  curl -s -X POST "https://api.newrelic.com/v2/applications/${newrelic_app_id}/deployments.json" \
-    -H "X-Api-Key:${NEWRELIC_API_KEY}" \
-    -H 'Content-Type: application/json' \
-    -d "$(newrelic_body)" > /dev/null
+  case ${environment} in
+    "production")
+      if [[ ${PROD_NEWRELIC_API_KEY} != "" ]]
+      then
+        declare -r new_relic_token=${PROD_NEWRELIC_API_KEY}
+      else
+        declare -r new_relic_token=${NEWRELIC_API_KEY}
+      fi
+      ;;
+    *)
+      if [[ ${DEV_NEWRELIC_API_KEY} != "" ]]
+      then
+        declare -r new_relic_token=${DEV_NEWRELIC_API_KEY}
+      else
+        declare -r new_relic_token=${NEWRELIC_API_KEY}
+      fi
+      ;;
+  esac
+  if [[ ${new_relic_token} == "" ]]
+  then
+    echo "Environment variable *NEWRELIC_API_KEY not provided."
+  else
+    curl -s -X POST "https://api.newrelic.com/v2/applications/${newrelic_app_id}/deployments.json" \
+      -H "X-Api-Key:${new_relic_token}" \
+      -H 'Content-Type: application/json' \
+      -d "$(newrelic_body)" > /dev/null
+  fi
 }
 
 tag_docker_release () {
