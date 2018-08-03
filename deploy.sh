@@ -35,7 +35,7 @@ create_gh_deployment () {
     curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments" \
       -H 'Content-Type: application/json' \
       -H 'Accept: application/vnd.github.ant-man-preview+json' \
-      -u ${GITHUB_ACCESS_TOKEN} \
+      -u "waffle-cicd-bot:${GITHUB_ACCESS_TOKEN}" \
       -d "$(gh_deployment_create_body)"
   fi
 }
@@ -50,7 +50,7 @@ notify_gh_about_a_deployment () {
     curl -s -X POST "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/deployments/${deployment_id}/statuses" \
       -H 'Content-Type: application/json' \
       -H 'Accept: application/vnd.github.ant-man-preview+json' \
-      -u ${GITHUB_ACCESS_TOKEN} \
+      -u "waffle-cicd-bot:${GITHUB_ACCESS_TOKEN}" \
       -d "$(gh_deployment_notify_body $deployment_status)" > /dev/null
   fi
 }
