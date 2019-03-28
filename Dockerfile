@@ -1,4 +1,4 @@
-FROM circleci/node:8.15.1
+FROM circleci/node:8.15.1-browsers
 
 ADD deploy.sh /bin/deploy
 
