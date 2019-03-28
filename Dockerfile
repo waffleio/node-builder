@@ -1,4 +1,4 @@
-FROM circleci/node:8.11.4
+FROM circleci/node:8.15.1
 
 ADD deploy.sh /bin/deploy
 
